@@ -6,12 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Users, ArrowLeft } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 const Register = () => {
-  const { toast } = useToast();
+  const navigate = useNavigate();
+  const { signUp, loading } = useAuth();
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -43,33 +44,28 @@ const Register = () => {
     { value: "8", label: "8x pro Monat" }
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (formData.password !== formData.confirmPassword) {
-      toast({
-        title: "Fehler",
-        description: "Die Passwörter stimmen nicht überein.",
-        variant: "destructive"
-      });
       return;
     }
 
     if (!formData.acceptTerms) {
-      toast({
-        title: "Fehler", 
-        description: "Bitte akzeptieren Sie die Nutzungsbedingungen.",
-        variant: "destructive"
-      });
       return;
     }
 
-    toast({
-      title: "Registrierung erfolgreich!",
-      description: "Ihr Konto wurde erstellt. Sie können sich jetzt anmelden."
+    const { data, error } = await signUp(formData.email, formData.password, {
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      bundesland: formData.bundesland,
+      klassenstufe: formData.klassenstufe,
+      sessionsPerMonth: parseInt(formData.sessionsPerMonth) || 1,
     });
 
-    console.log("Registration data:", formData);
+    if (data && !error) {
+      navigate("/availability");
+    }
   };
 
   return (
@@ -226,8 +222,8 @@ const Register = () => {
               </Label>
             </div>
 
-            <Button type="submit" className="w-full" size="lg">
-              Konto erstellen
+            <Button type="submit" className="w-full" size="lg" disabled={loading}>
+              {loading ? "Wird erstellt..." : "Konto erstellen"}
             </Button>
           </form>
 

@@ -1,30 +1,35 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Users, ArrowLeft } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 const Login = () => {
-  const { toast } = useToast();
+  const navigate = useNavigate();
+  const { signIn, user, loading } = useAuth();
   const [formData, setFormData] = useState({
     email: "",
     password: ""
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (user) {
+      navigate("/");
+    }
+  }, [user, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    toast({
-      title: "Anmeldung erfolgreich!",
-      description: "Sie werden zu Ihrem Dashboard weitergeleitet."
-    });
-
-    console.log("Login data:", formData);
-    // Hier würde die Authentifizierung stattfinden
+    const { data, error } = await signIn(formData.email, formData.password);
+    
+    if (data && !error) {
+      navigate("/");
+    }
   };
 
   return (
@@ -78,8 +83,8 @@ const Login = () => {
                 </a>
               </div>
 
-              <Button type="submit" className="w-full" size="lg">
-                Anmelden
+              <Button type="submit" className="w-full" size="lg" disabled={loading}>
+                {loading ? "Wird angemeldet..." : "Anmelden"}
               </Button>
             </form>
 

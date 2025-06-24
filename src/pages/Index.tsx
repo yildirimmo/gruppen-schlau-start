@@ -1,10 +1,32 @@
-
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Clock, MapPin, BookOpen, CheckCircle, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Index = () => {
+  const navigate = useNavigate();
+  const { user, loading } = useAuth();
+
+  useEffect(() => {
+    if (!loading && user) {
+      navigate("/dashboard");
+    }
+  }, [user, loading, navigate]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Wird geladen...</p>
+        </div>
+      </div>
+    );
+  }
+
   const features = [
     {
       icon: Users,
@@ -47,21 +69,25 @@ const Index = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
       {/* Navigation */}
-      <nav className="bg-white/80 backdrop-blur-md border-b sticky top-0 z-50">
+      <nav className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
+          <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-2">
               <Users className="h-8 w-8 text-blue-600" />
-              <span className="text-xl font-bold text-gray-900">GruppenSchlau</span>
+              <span className="text-2xl font-bold text-gray-900">GruppenSchlau</span>
             </div>
             <div className="flex items-center space-x-4">
               <Link to="/login">
-                <Button variant="ghost">Anmelden</Button>
+                <Button variant="outline">
+                  Anmelden
+                </Button>
               </Link>
               <Link to="/register">
-                <Button>Registrieren</Button>
+                <Button>
+                  Registrieren
+                </Button>
               </Link>
             </div>
           </div>
