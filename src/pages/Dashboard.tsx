@@ -2,19 +2,26 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useGroups } from "@/hooks/useGroups";
+import { useAvailabilities } from "@/hooks/useAvailabilities";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
-import { Users, LogOut, Settings, Calendar, Users2 } from "lucide-react";
+import { Users, LogOut, Settings, Calendar, Users2, AlertCircle, CheckCircle } from "lucide-react";
 
 const Dashboard = () => {
   const { user, signOut } = useAuth();
   const { profile } = useProfile(user?.id);
   const { userGroups, matchingGroups, isLoadingUserGroups, isLoadingMatching } = useGroups(user?.id);
+  const { availabilities } = useAvailabilities(user?.id || '');
 
   const handleSignOut = async () => {
     await signOut();
   };
+
+  // Check user setup status
+  const hasProfile = profile?.first_name && profile?.last_name && profile?.bundesland && profile?.klassenstufe;
+  const hasAvailabilities = availabilities && availabilities.length > 0;
+  const hasGroups = userGroups && userGroups.length > 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
@@ -45,6 +52,69 @@ const Dashboard = () => {
           <p className="text-gray-600">Verwalten Sie Ihre Gruppennachhilfe</p>
         </div>
 
+        {/* Setup Progress */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Ihr Fortschritt</CardTitle>
+            <CardDescription>Vervollständigen Sie Ihr Profil, um die beste Gruppenfindung zu erhalten</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  {hasProfile ? (
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                  ) : (
+                    <AlertCircle className="h-5 w-5 text-orange-500" />
+                  )}
+                  <span>Profil vervollständigt</span>
+                </div>
+                {hasProfile ? (
+                  <span className="text-green-600 text-sm">✓ Abgeschlossen</span>
+                ) : (
+                  <span className="text-orange-500 text-sm">Ausstehend</span>
+                )}
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  {hasAvailabilities ? (
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                  ) : (
+                    <AlertCircle className="h-5 w-5 text-orange-500" />
+                  )}
+                  <span>Verfügbarkeiten eingetragen</span>
+                </div>
+                {hasAvailabilities ? (
+                  <span className="text-green-600 text-sm">✓ {availabilities?.length} Zeitslots</span>
+                ) : (
+                  <Link to="/availability">
+                    <Button size="sm">Jetzt eintragen</Button>
+                  </Link>
+                )}
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  {hasGroups ? (
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                  ) : (
+                    <AlertCircle className="h-5 w-5 text-gray-400" />
+                  )}
+                  <span>Einer Gruppe beigetreten</span>
+                </div>
+                {hasGroups ? (
+                  <span className="text-green-600 text-sm">✓ {userGroups?.length} Gruppe(n)</span>
+                ) : (
+                  <span className="text-gray-500 text-sm">
+                    {hasAvailabilities ? "Suche läuft..." : "Verfügbarkeiten benötigt"}
+                  </span>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {/* Profile Card */}
           <Card>
@@ -72,12 +142,14 @@ const Dashboard = () => {
                 <Calendar className="h-5 w-5 mr-2" />
                 Verfügbarkeiten
               </CardTitle>
-              <CardDescription>Ihre Zeitfenster verwalten</CardDescription>
+              <CardDescription>
+                {availabilities?.length || 0} Zeitslot{(availabilities?.length || 0) !== 1 ? 's' : ''} eingetragen
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <Link to="/availability">
                 <Button className="w-full">
-                  Verfügbarkeiten bearbeiten
+                  Verfügbarkeiten {hasAvailabilities ? 'bearbeiten' : 'eintragen'}
                 </Button>
               </Link>
             </CardContent>
@@ -123,8 +195,8 @@ const Dashboard = () => {
           </Card>
         </div>
 
-        {/* Matching Groups */}
-        {matchingGroups && matchingGroups.length > 0 && (
+        {/* Matching Groups - Only show if user has availabilities but no groups yet */}
+        {hasAvailabilities && (!userGroups || userGroups.length === 0) && (
           <Card>
             <CardHeader>
               <CardTitle>Passende Gruppen</CardTitle>
@@ -135,7 +207,7 @@ const Dashboard = () => {
             <CardContent>
               {isLoadingMatching ? (
                 <p className="text-gray-500">Wird geladen...</p>
-              ) : (
+              ) : matchingGroups && matchingGroups.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {matchingGroups.map((group) => (
                     <div key={group.group_id} className="p-4 border rounded-lg">
@@ -150,7 +222,37 @@ const Dashboard = () => {
                     </div>
                   ))}
                 </div>
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-gray-600">
+                    Momentan keine passenden Gruppen verfügbar. 
+                    Wir benachrichtigen Sie, sobald eine passende Gruppe gefunden wird.
+                  </p>
+                  <Link to="/availability" className="mt-4 inline-block">
+                    <Button variant="outline">Mehr Verfügbarkeiten hinzufügen</Button>
+                  </Link>
+                </div>
               )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Call to action for users without availabilities */}
+        {!hasAvailabilities && (
+          <Card className="border-blue-200 bg-blue-50">
+            <CardContent className="text-center py-8">
+              <Calendar className="h-12 w-12 text-blue-600 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                Bereit für Gruppennachhilfe?
+              </h3>
+              <p className="text-gray-600 mb-4">
+                Tragen Sie Ihre Verfügbarkeiten ein, um mit anderen Schülern in Kontakt zu kommen.
+              </p>
+              <Link to="/availability">
+                <Button size="lg">
+                  Verfügbarkeiten eintragen
+                </Button>
+              </Link>
             </CardContent>
           </Card>
         )}
