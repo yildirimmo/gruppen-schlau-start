@@ -9,16 +9,163 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      availabilities: {
+        Row: {
+          created_at: string
+          day_of_week: Database["public"]["Enums"]["day_of_week"]
+          id: string
+          time_slot: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: Database["public"]["Enums"]["day_of_week"]
+          id?: string
+          time_slot: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: Database["public"]["Enums"]["day_of_week"]
+          id?: string
+          time_slot?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      group_members: {
+        Row: {
+          group_id: string
+          id: string
+          joined_at: string
+          user_id: string
+        }
+        Insert: {
+          group_id: string
+          id?: string
+          joined_at?: string
+          user_id: string
+        }
+        Update: {
+          group_id?: string
+          id?: string
+          joined_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      groups: {
+        Row: {
+          admin_note: string | null
+          bundesland: string
+          created_at: string
+          id: string
+          klassenstufe: string
+          link_sent_at: string | null
+          max_students: number
+          status: Database["public"]["Enums"]["group_status"]
+          time_slots: string[]
+          updated_at: string
+          whatsapp_link: string | null
+        }
+        Insert: {
+          admin_note?: string | null
+          bundesland: string
+          created_at?: string
+          id?: string
+          klassenstufe: string
+          link_sent_at?: string | null
+          max_students?: number
+          status?: Database["public"]["Enums"]["group_status"]
+          time_slots: string[]
+          updated_at?: string
+          whatsapp_link?: string | null
+        }
+        Update: {
+          admin_note?: string | null
+          bundesland?: string
+          created_at?: string
+          id?: string
+          klassenstufe?: string
+          link_sent_at?: string | null
+          max_students?: number
+          status?: Database["public"]["Enums"]["group_status"]
+          time_slots?: string[]
+          updated_at?: string
+          whatsapp_link?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          bundesland: string
+          created_at: string
+          email: string
+          first_name: string
+          id: string
+          klassenstufe: string
+          last_name: string
+          sessions_per_month: number
+          updated_at: string
+        }
+        Insert: {
+          bundesland: string
+          created_at?: string
+          email: string
+          first_name: string
+          id: string
+          klassenstufe: string
+          last_name: string
+          sessions_per_month?: number
+          updated_at?: string
+        }
+        Update: {
+          bundesland?: string
+          created_at?: string
+          email?: string
+          first_name?: string
+          id?: string
+          klassenstufe?: string
+          last_name?: string
+          sessions_per_month?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      find_matching_groups: {
+        Args: { user_uuid: string }
+        Returns: {
+          group_id: string
+          bundesland: string
+          klassenstufe: string
+          matching_slots: number
+          current_members: number
+        }[]
+      }
     }
     Enums: {
-      [_ in never]: never
+      day_of_week:
+        | "monday"
+        | "tuesday"
+        | "wednesday"
+        | "thursday"
+        | "friday"
+        | "saturday"
+        | "sunday"
+      group_status: "pending" | "active" | "completed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +280,17 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      day_of_week: [
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday",
+        "sunday",
+      ],
+      group_status: ["pending", "active", "completed"],
+    },
   },
 } as const
