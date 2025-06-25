@@ -28,4 +28,3 @@ export const useAdminCheck = () => {
     isLoading,
   };
 };
-</tml>
