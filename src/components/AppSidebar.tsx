@@ -76,6 +76,9 @@ export function AppSidebar() {
     } else if (isAdmin) {
       // Admin check complete and user is admin - show admin items
       allItems.push(...adminItems);
+      console.log('Admin items added to sidebar');
+    } else {
+      console.log('User is not admin, no admin items shown');
     }
     // If not admin and not loading, don't show admin items at all
   }
