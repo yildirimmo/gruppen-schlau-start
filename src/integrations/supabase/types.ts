@@ -111,6 +111,7 @@ export type Database = {
           email: string
           first_name: string
           id: string
+          is_admin: boolean
           klassenstufe: string
           last_name: string
           sessions_per_month: number
@@ -122,6 +123,7 @@ export type Database = {
           email: string
           first_name: string
           id: string
+          is_admin?: boolean
           klassenstufe: string
           last_name: string
           sessions_per_month?: number
@@ -133,6 +135,7 @@ export type Database = {
           email?: string
           first_name?: string
           id?: string
+          is_admin?: boolean
           klassenstufe?: string
           last_name?: string
           sessions_per_month?: number
@@ -154,6 +157,34 @@ export type Database = {
           matching_slots: number
           current_members: number
         }[]
+      }
+      get_active_groups: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          group_id: string
+          bundesland: string
+          klassenstufe: string
+          time_slots: string[]
+          student_count: number
+          whatsapp_link: string
+          created_at: string
+          status: string
+        }[]
+      }
+      get_pending_groups_with_students: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          group_id: string
+          bundesland: string
+          klassenstufe: string
+          time_slots: string[]
+          student_count: number
+          students: Json
+        }[]
+      }
+      is_current_user_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
       }
     }
     Enums: {
