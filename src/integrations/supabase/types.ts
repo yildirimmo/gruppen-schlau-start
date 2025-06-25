@@ -148,6 +148,25 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_auto_group: {
+        Args: {
+          p_bundesland: string
+          p_klassenstufe: string
+          p_student_ids: string[]
+          p_time_slots: string[]
+        }
+        Returns: string
+      }
+      find_compatible_students: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          bundesland: string
+          klassenstufe: string
+          matching_students: Json
+          common_time_slots: string[]
+          student_count: number
+        }[]
+      }
       find_matching_groups: {
         Args: { user_uuid: string }
         Returns: {
@@ -185,6 +204,16 @@ export type Database = {
       is_current_user_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
+      }
+      process_auto_matching: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          created_group_id: string
+          bundesland: string
+          klassenstufe: string
+          student_count: number
+          common_slots: string[]
+        }[]
       }
     }
     Enums: {

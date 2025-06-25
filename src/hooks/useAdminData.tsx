@@ -168,6 +168,7 @@ export const useAdminData = () => {
       queryClient.invalidateQueries({ queryKey: ['pending-groups'] });
       queryClient.invalidateQueries({ queryKey: ['active-groups'] });
       queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['all-students'] });
       toast({
         title: "Gruppe erstellt!",
         description: "Die Schüler wurden per E-Mail benachrichtigt und erhalten den WhatsApp-Link.",
