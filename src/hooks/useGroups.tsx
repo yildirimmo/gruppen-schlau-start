@@ -12,6 +12,8 @@ export const useGroups = (userId?: string) => {
     queryFn: async () => {
       if (!userId) return [];
       
+      console.log('Fetching matching groups for user:', userId);
+      
       try {
         const { data, error } = await supabase.rpc('find_matching_groups', {
           user_uuid: userId
@@ -19,15 +21,21 @@ export const useGroups = (userId?: string) => {
 
         if (error) {
           console.error('Error calling find_matching_groups:', error);
+          // Don't throw error, just return empty array
           return [];
         }
+        
+        console.log('Matching groups data:', data);
         return data || [];
       } catch (error) {
         console.error('Error in find_matching_groups query:', error);
+        // Return empty array instead of throwing
         return [];
       }
     },
     enabled: !!userId,
+    retry: false, // Don't retry on failure
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const { data: userGroups, isLoading: isLoadingUserGroups } = useQuery({
@@ -35,26 +43,40 @@ export const useGroups = (userId?: string) => {
     queryFn: async () => {
       if (!userId) return [];
       
-      const { data, error } = await supabase
-        .from('group_members')
-        .select(`
-          *,
-          groups:group_id (
-            id,
-            bundesland,
-            klassenstufe,
-            status,
-            whatsapp_link,
-            created_at,
-            max_students
-          )
-        `)
-        .eq('user_id', userId);
+      console.log('Fetching user groups for user:', userId);
+      
+      try {
+        const { data, error } = await supabase
+          .from('group_members')
+          .select(`
+            *,
+            groups:group_id (
+              id,
+              bundesland,
+              klassenstufe,
+              status,
+              whatsapp_link,
+              created_at,
+              max_students
+            )
+          `)
+          .eq('user_id', userId);
 
-      if (error) throw error;
-      return data || [];
+        if (error) {
+          console.error('Error fetching user groups:', error);
+          return [];
+        }
+        
+        console.log('User groups data:', data);
+        return data || [];
+      } catch (error) {
+        console.error('Error in user groups query:', error);
+        return [];
+      }
     },
     enabled: !!userId,
+    retry: 1,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const joinGroup = useMutation({
@@ -79,6 +101,7 @@ export const useGroups = (userId?: string) => {
       });
     },
     onError: (error: any) => {
+      console.error('Error joining group:', error);
       toast({
         title: "Fehler beim Beitreten",
         description: error.message,

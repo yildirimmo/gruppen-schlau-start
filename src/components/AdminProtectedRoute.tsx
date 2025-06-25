@@ -14,9 +14,16 @@ const AdminProtectedRoute = ({ children }: AdminProtectedRouteProps) => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    console.log('AdminProtectedRoute - User:', user?.id);
+    console.log('AdminProtectedRoute - Loading:', loading);
+    console.log('AdminProtectedRoute - Is Admin:', isAdmin);
+    console.log('AdminProtectedRoute - Checking Admin:', isCheckingAdmin);
+
     if (!loading && !user) {
+      console.log('No user found, redirecting to login');
       navigate("/login");
     } else if (!isCheckingAdmin && user && !isAdmin) {
+      console.log('User is not admin, redirecting to dashboard');
       navigate("/dashboard");
     }
   }, [user, loading, isAdmin, isCheckingAdmin, navigate]);
@@ -33,9 +40,11 @@ const AdminProtectedRoute = ({ children }: AdminProtectedRouteProps) => {
   }
 
   if (!user || !isAdmin) {
+    console.log('Access denied: user =', !!user, 'isAdmin =', isAdmin);
     return null;
   }
 
+  console.log('Admin access granted');
   return <>{children}</>;
 };
 

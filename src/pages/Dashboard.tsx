@@ -8,18 +8,39 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useGroups } from "@/hooks/useGroups";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
   const { user, signOut } = useAuth();
   const { profile, isLoading: isLoadingProfile } = useProfile(user?.id);
   const { userGroups, isLoadingUserGroups } = useGroups(user?.id);
-  const { isAdmin } = useAdminCheck();
+  const { isAdmin, isLoading: isCheckingAdmin } = useAdminCheck();
+  const navigate = useNavigate();
+
+  // Debug logging
+  useEffect(() => {
+    console.log('Dashboard - User:', user?.id);
+    console.log('Dashboard - Profile:', profile);
+    console.log('Dashboard - Is Admin:', isAdmin);
+    console.log('Dashboard - User Groups:', userGroups);
+  }, [user, profile, isAdmin, userGroups]);
 
   // Ensure userGroups is always an array
-  const safeUserGroups = userGroups || [];
+  const safeUserGroups = Array.isArray(userGroups) ? userGroups : [];
 
-  if (isLoadingProfile || isLoadingUserGroups) {
+  const handleAdminPanelClick = () => {
+    console.log('Admin panel button clicked');
+    console.log('Is admin:', isAdmin);
+    
+    if (isAdmin) {
+      console.log('Navigating to admin panel');
+      navigate('/admin');
+    } else {
+      console.log('User is not admin, cannot access admin panel');
+    }
+  };
+
+  if (isLoadingProfile || isLoadingUserGroups || isCheckingAdmin) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
         <div className="text-center">
@@ -46,18 +67,43 @@ const Dashboard = () => {
           </div>
           <div className="flex gap-3">
             {isAdmin && (
-              <Link to="/admin">
-                <Button variant="outline" className="flex items-center gap-2">
+              <div className="flex flex-col gap-2">
+                <Button 
+                  variant="outline" 
+                  className="flex items-center gap-2"
+                  onClick={handleAdminPanelClick}
+                >
                   <Shield className="h-4 w-4" />
                   Admin Panel
                 </Button>
-              </Link>
+                <Link to="/admin">
+                  <Button variant="secondary" size="sm" className="w-full">
+                    <Shield className="h-4 w-4 mr-2" />
+                    Direkt zu Admin
+                  </Button>
+                </Link>
+              </div>
             )}
             <Button variant="outline" onClick={signOut}>
               Abmelden
             </Button>
           </div>
         </div>
+
+        {/* Debug Info for Admin Users */}
+        {isAdmin && (
+          <Card className="mb-4 border-orange-200 bg-orange-50">
+            <CardContent className="p-4">
+              <div className="text-sm text-orange-800">
+                <p><strong>Debug Info:</strong></p>
+                <p>User ID: {user?.id}</p>
+                <p>Is Admin: {isAdmin ? 'Yes' : 'No'}</p>
+                <p>Profile loaded: {profile ? 'Yes' : 'No'}</p>
+                <p>Admin check loading: {isCheckingAdmin ? 'Yes' : 'No'}</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Profile Card */}
         <Card className="mb-8">
