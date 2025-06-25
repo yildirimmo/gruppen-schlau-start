@@ -7,29 +7,36 @@ import { Label } from "@/components/ui/label";
 import { Link, useNavigate } from "react-router-dom";
 import { Users, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useAdminCheck } from "@/hooks/useAdminCheck";
 
 const Login = () => {
   const navigate = useNavigate();
   const { signIn, user, loading } = useAuth();
+  const { isAdmin, isLoading: isCheckingAdmin } = useAdminCheck();
   const [formData, setFormData] = useState({
     email: "",
     password: ""
   });
 
   useEffect(() => {
-    if (user) {
-      navigate("/");
+    if (user && !isCheckingAdmin) {
+      console.log('User logged in, checking admin status:', isAdmin);
+      if (isAdmin) {
+        console.log('User is admin, redirecting to admin panel');
+        navigate("/admin");
+      } else {
+        console.log('User is not admin, redirecting to dashboard');
+        navigate("/dashboard");
+      }
     }
-  }, [user, navigate]);
+  }, [user, isAdmin, isCheckingAdmin, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     const { data, error } = await signIn(formData.email, formData.password);
     
-    if (data && !error) {
-      navigate("/");
-    }
+    // Navigation will be handled by the useEffect above
   };
 
   return (
@@ -83,8 +90,8 @@ const Login = () => {
                 </a>
               </div>
 
-              <Button type="submit" className="w-full" size="lg" disabled={loading}>
-                {loading ? "Wird angemeldet..." : "Anmelden"}
+              <Button type="submit" className="w-full" size="lg" disabled={loading || isCheckingAdmin}>
+                {loading || isCheckingAdmin ? "Wird angemeldet..." : "Anmelden"}
               </Button>
             </form>
 
