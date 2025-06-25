@@ -3,44 +3,28 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Users, Calendar, Clock, BookOpen, Settings, Shield } from "lucide-react";
+import { Users, Calendar, Clock, BookOpen } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useGroups } from "@/hooks/useGroups";
-import { useAdminCheck } from "@/hooks/useAdminCheck";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 const Dashboard = () => {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const { profile, isLoading: isLoadingProfile } = useProfile(user?.id);
   const { userGroups, isLoadingUserGroups } = useGroups(user?.id);
-  const { isAdmin, isLoading: isCheckingAdmin } = useAdminCheck();
-  const navigate = useNavigate();
 
   // Debug logging
   useEffect(() => {
     console.log('Dashboard - User:', user?.id);
     console.log('Dashboard - Profile:', profile);
-    console.log('Dashboard - Is Admin:', isAdmin);
     console.log('Dashboard - User Groups:', userGroups);
-  }, [user, profile, isAdmin, userGroups]);
+  }, [user, profile, userGroups]);
 
   // Ensure userGroups is always an array
   const safeUserGroups = Array.isArray(userGroups) ? userGroups : [];
 
-  const handleAdminPanelClick = () => {
-    console.log('Admin panel button clicked');
-    console.log('Is admin:', isAdmin);
-    
-    if (isAdmin) {
-      console.log('Navigating to admin panel via navigate');
-      navigate('/admin');
-    } else {
-      console.log('User is not admin, cannot access admin panel');
-    }
-  };
-
-  if (isLoadingProfile || isLoadingUserGroups || isCheckingAdmin) {
+  if (isLoadingProfile || isLoadingUserGroups) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
         <div className="text-center">
@@ -55,63 +39,15 @@ const Dashboard = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 py-8 px-4">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <div className="flex items-center space-x-2 mb-2">
-              <Users className="h-8 w-8 text-blue-600" />
-              <span className="text-2xl font-bold text-gray-900">GruppenSchlau</span>
-            </div>
-            <p className="text-gray-600">
-              Willkommen zurück, {profile?.first_name}!
-            </p>
+        <div className="mb-8">
+          <div className="flex items-center space-x-2 mb-2">
+            <Users className="h-8 w-8 text-blue-600" />
+            <span className="text-2xl font-bold text-gray-900">Dashboard</span>
           </div>
-          <div className="flex gap-3">
-            {isAdmin && (
-              <Button 
-                variant="outline" 
-                className="flex items-center gap-2"
-                onClick={handleAdminPanelClick}
-              >
-                <Shield className="h-4 w-4" />
-                Admin Panel
-              </Button>
-            )}
-            <Button variant="outline" onClick={signOut}>
-              Abmelden
-            </Button>
-          </div>
+          <p className="text-gray-600">
+            Willkommen zurück, {profile?.first_name}!
+          </p>
         </div>
-
-        {/* Debug Info for Admin Users */}
-        {isAdmin && (
-          <Card className="mb-4 border-orange-200 bg-orange-50">
-            <CardContent className="p-4">
-              <div className="text-sm text-orange-800">
-                <p><strong>Debug Info:</strong></p>
-                <p>User ID: {user?.id}</p>
-                <p>Is Admin: {isAdmin ? 'Yes' : 'No'}</p>
-                <p>Profile loaded: {profile ? 'Yes' : 'No'}</p>
-                <p>Admin check loading: {isCheckingAdmin ? 'Yes' : 'No'}</p>
-                <div className="mt-2 flex gap-2">
-                  <Button 
-                    size="sm" 
-                    onClick={handleAdminPanelClick}
-                    className="bg-orange-600 hover:bg-orange-700"
-                  >
-                    <Shield className="h-4 w-4 mr-2" />
-                    Test Admin Navigation
-                  </Button>
-                  <Link to="/admin">
-                    <Button size="sm" variant="outline">
-                      <Shield className="h-4 w-4 mr-2" />
-                      Direct Link Test
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
         {/* Profile Card */}
         <Card className="mb-8">
