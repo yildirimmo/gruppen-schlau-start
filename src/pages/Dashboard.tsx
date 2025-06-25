@@ -21,7 +21,7 @@ import { AdminDebugPanel } from "@/components/AdminDebugPanel";
 const Dashboard = () => {
   const { user } = useAuth();
   const { profile, isLoading: isLoadingProfile } = useProfile();
-  const { userGroups, isLoading: isLoadingGroups } = useGroups();
+  const { userGroups, isLoadingUserGroups } = useGroups(user?.id);
 
   useEffect(() => {
     console.log('Dashboard - User:', user?.id);
@@ -29,7 +29,7 @@ const Dashboard = () => {
     console.log('Dashboard - Groups:', userGroups);
   }, [user, profile, userGroups]);
 
-  if (isLoadingProfile || isLoadingGroups) {
+  if (isLoadingProfile || isLoadingUserGroups) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
         <div className="text-center">
@@ -122,66 +122,73 @@ const Dashboard = () => {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {userGroups.map((group, index) => (
-                    <Card key={index} className="border-l-4 border-l-blue-500">
-                      <CardContent className="p-4">
-                        <div className="flex justify-between items-start">
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-4">
-                              <div className="flex items-center gap-1">
-                                <MapPin className="h-4 w-4" />
-                                <span className="font-medium">{group.bundesland}</span>
+                  {userGroups.map((membership, index) => {
+                    const group = membership.groups as any;
+                    return (
+                      <Card key={index} className="border-l-4 border-l-blue-500">
+                        <CardContent className="p-4">
+                          <div className="flex justify-between items-start">
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-1">
+                                  <MapPin className="h-4 w-4" />
+                                  <span className="font-medium">{group?.bundesland}</span>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <GraduationCap className="h-4 w-4" />
+                                  <span className="font-medium">{group?.klassenstufe}</span>
+                                </div>
                               </div>
-                              <div className="flex items-center gap-1">
-                                <GraduationCap className="h-4 w-4" />
-                                <span className="font-medium">{group.klassenstufe}</span>
+                              
+                              {group?.time_slots && (
+                                <div className="space-y-1">
+                                  <div className="text-sm font-medium">Zeitslots:</div>
+                                  <div className="flex flex-wrap gap-1">
+                                    {group.time_slots.map((slot: string, slotIndex: number) => (
+                                      <Badge key={slotIndex} variant="outline" className="text-xs">
+                                        <Clock className="h-3 w-3 mr-1" />
+                                        {slot}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              
+                              <div className="flex items-center gap-2">
+                                {getGroupStatusBadge(group?.status || 'pending')}
+                                <span className="text-sm text-gray-500">
+                                  Beigetreten am {new Date(membership.joined_at).toLocaleDateString('de-DE')}
+                                </span>
                               </div>
+                              
+                              {group?.whatsapp_link && group?.status === 'active' && (
+                                <div className="mt-3">
+                                  <a 
+                                    href={group.whatsapp_link} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-2 text-green-600 hover:text-green-700 font-medium"
+                                  >
+                                    <ExternalLink className="h-4 w-4" />
+                                    WhatsApp Gruppe beitreten
+                                  </a>
+                                </div>
+                              )}
                             </div>
-                            
-                            <div className="space-y-1">
-                              <div className="text-sm font-medium">Zeitslots:</div>
-                              <div className="flex flex-wrap gap-1">
-                                {group.time_slots?.map((slot, slotIndex) => (
-                                  <Badge key={slotIndex} variant="outline" className="text-xs">
-                                    <Clock className="h-3 w-3 mr-1" />
-                                    {slot}
-                                  </Badge>
-                                ))}
-                              </div>
-                            </div>
-                            
-                            <div className="flex items-center gap-2">
-                              {getGroupStatusBadge(group.status)}
-                              <span className="text-sm text-gray-500">
-                                Beigetreten am {new Date(group.joined_at).toLocaleDateString('de-DE')}
-                              </span>
-                            </div>
-                            
-                            {group.whatsapp_link && group.status === 'active' && (
-                              <div className="mt-3">
-                                <a 
-                                  href={group.whatsapp_link} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-2 text-green-600 hover:text-green-700 font-medium"
-                                >
-                                  <ExternalLink className="h-4 w-4" />
-                                  WhatsApp Gruppe beitreten
-                                </a>
-                              </div>
-                            )}
                           </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
                 </div>
               )}
             </CardContent>
           </Card>
 
           {/* Group Matching */}
-          <GroupMatcher />
+          <div className="lg:col-span-1">
+            {user?.id && <GroupMatcher userId={user.id} />}
+          </div>
         </div>
       </div>
     </div>
