@@ -32,8 +32,7 @@ export const useStudentManagement = () => {
             email,
             bundesland,
             klassenstufe,
-            created_at,
-            availabilities:availabilities(count)
+            created_at
           `)
           .order('created_at', { ascending: false });
 
@@ -42,9 +41,10 @@ export const useStudentManagement = () => {
           return [];
         }
 
-        // Add group status for each student
+        // Add group status and availability count for each student
         const studentsWithStatus = await Promise.all(
           (data || []).map(async (student) => {
+            // Get group status
             const { data: groupData } = await supabase
               .from('group_members')
               .select(`
@@ -55,10 +55,16 @@ export const useStudentManagement = () => {
               .eq('user_id', student.id)
               .single();
 
+            // Get availability count
+            const { count: availabilityCount } = await supabase
+              .from('availabilities')
+              .select('*', { count: 'exact', head: true })
+              .eq('user_id', student.id);
+
             return {
               ...student,
               group_status: groupData?.groups?.status || 'not_assigned',
-              availabilities_count: student.availabilities?.[0]?.count || 0
+              availabilities_count: availabilityCount || 0
             };
           })
         );
