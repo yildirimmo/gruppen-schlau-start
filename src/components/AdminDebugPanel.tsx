@@ -5,11 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const AdminDebugPanel = () => {
   const { user } = useAuth();
-  const { isAdmin } = useAdminCheck();
+  const { isAdmin, refetch } = useAdminCheck();
   const [isUpdating, setIsUpdating] = useState(false);
+  const queryClient = useQueryClient();
 
   const handleMakeAdmin = async () => {
     if (!user?.id) return;
@@ -28,13 +30,29 @@ export const AdminDebugPanel = () => {
         alert('Fehler beim Setzen des Admin-Status: ' + error.message);
       } else {
         console.log('Successfully made user admin');
-        alert('Admin-Status erfolgreich gesetzt! Bitte lade die Seite neu.');
-        // Force page reload to refresh admin status
-        window.location.reload();
+        
+        // Invalidate and refetch admin status
+        await queryClient.invalidateQueries({ queryKey: ['is-admin'] });
+        await refetch();
+        
+        alert('Admin-Status erfolgreich gesetzt! Die Berechtigung ist jetzt aktiv.');
       }
     } catch (error) {
       console.error('Exception making user admin:', error);
       alert('Unerwarteter Fehler: ' + error);
+    }
+    setIsUpdating(false);
+  };
+
+  const handleRefreshStatus = async () => {
+    setIsUpdating(true);
+    try {
+      await queryClient.invalidateQueries({ queryKey: ['is-admin'] });
+      await refetch();
+      alert('Admin-Status wurde aktualisiert!');
+    } catch (error) {
+      console.error('Error refreshing admin status:', error);
+      alert('Fehler beim Aktualisieren des Status');
     }
     setIsUpdating(false);
   };
@@ -61,19 +79,40 @@ export const AdminDebugPanel = () => {
           <p><strong>Ist Admin:</strong> {isAdmin ? 'Ja' : 'Nein'}</p>
         </div>
         
-        {!isAdmin && (
+        <div className="flex gap-2">
+          {!isAdmin && (
+            <Button 
+              onClick={handleMakeAdmin}
+              disabled={isUpdating}
+              className="flex-1"
+            >
+              {isUpdating ? 'Wird gesetzt...' : 'Als Admin setzen'}
+            </Button>
+          )}
+          
           <Button 
-            onClick={handleMakeAdmin}
+            onClick={handleRefreshStatus}
             disabled={isUpdating}
-            className="w-full"
+            variant="outline"
+            className="flex-1"
           >
-            {isUpdating ? 'Wird gesetzt...' : 'Als Admin setzen'}
+            {isUpdating ? 'Aktualisiere...' : 'Status aktualisieren'}
           </Button>
-        )}
+        </div>
         
-        {isAdmin && (
+        {isAdmin ? (
           <div className="p-3 bg-green-100 border border-green-200 rounded">
             <p className="text-green-800">✅ Du bist bereits Admin!</p>
+            <p className="text-sm text-green-700 mt-1">
+              Das Admin Panel sollte jetzt in der Sidebar zugänglich sein.
+            </p>
+          </div>
+        ) : (
+          <div className="p-3 bg-yellow-100 border border-yellow-200 rounded">
+            <p className="text-yellow-800">⚠️ Du bist noch kein Admin</p>
+            <p className="text-sm text-yellow-700 mt-1">
+              Klicke auf "Als Admin setzen" um Admin-Berechtigung zu erhalten.
+            </p>
           </div>
         )}
       </CardContent>

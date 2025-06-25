@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 export const useAdminCheck = () => {
   const { user } = useAuth();
 
-  const { data: isAdmin, isLoading, error } = useQuery({
+  const { data: isAdmin, isLoading, error, refetch } = useQuery({
     queryKey: ['is-admin', user?.id],
     queryFn: async () => {
       if (!user?.id) {
@@ -40,8 +40,9 @@ export const useAdminCheck = () => {
     },
     enabled: !!user?.id,
     retry: 1,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes (was cacheTime)
+    staleTime: 1 * 60 * 1000, // Reduced to 1 minute for faster updates
+    gcTime: 2 * 60 * 1000, // Reduced to 2 minutes
+    refetchOnWindowFocus: true, // Refetch when window regains focus
   });
 
   if (error) {
@@ -51,5 +52,6 @@ export const useAdminCheck = () => {
   return {
     isAdmin: isAdmin || false,
     isLoading,
+    refetch, // Export refetch function
   };
 };
