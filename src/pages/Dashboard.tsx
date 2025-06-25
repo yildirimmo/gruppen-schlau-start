@@ -16,6 +16,9 @@ const Dashboard = () => {
   const { userGroups, isLoadingUserGroups } = useGroups(user?.id);
   const { isAdmin } = useAdminCheck();
 
+  // Ensure userGroups is always an array
+  const safeUserGroups = userGroups || [];
+
   if (isLoadingProfile || isLoadingUserGroups) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
@@ -100,7 +103,7 @@ const Dashboard = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {userGroups.length === 0 ? (
+            {safeUserGroups.length === 0 ? (
               <div className="text-center py-8">
                 <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -119,7 +122,7 @@ const Dashboard = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                {userGroups.map((membership) => (
+                {safeUserGroups.map((membership) => (
                   <Card key={membership.id} className="border-l-4 border-l-blue-500">
                     <CardContent className="p-4">
                       <div className="flex justify-between items-start">
