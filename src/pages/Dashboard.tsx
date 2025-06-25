@@ -33,7 +33,7 @@ const Dashboard = () => {
     console.log('Is admin:', isAdmin);
     
     if (isAdmin) {
-      console.log('Navigating to admin panel');
+      console.log('Navigating to admin panel via navigate');
       navigate('/admin');
     } else {
       console.log('User is not admin, cannot access admin panel');
@@ -67,22 +67,14 @@ const Dashboard = () => {
           </div>
           <div className="flex gap-3">
             {isAdmin && (
-              <div className="flex flex-col gap-2">
-                <Button 
-                  variant="outline" 
-                  className="flex items-center gap-2"
-                  onClick={handleAdminPanelClick}
-                >
-                  <Shield className="h-4 w-4" />
-                  Admin Panel
-                </Button>
-                <Link to="/admin">
-                  <Button variant="secondary" size="sm" className="w-full">
-                    <Shield className="h-4 w-4 mr-2" />
-                    Direkt zu Admin
-                  </Button>
-                </Link>
-              </div>
+              <Button 
+                variant="outline" 
+                className="flex items-center gap-2"
+                onClick={handleAdminPanelClick}
+              >
+                <Shield className="h-4 w-4" />
+                Admin Panel
+              </Button>
             )}
             <Button variant="outline" onClick={signOut}>
               Abmelden
@@ -100,6 +92,22 @@ const Dashboard = () => {
                 <p>Is Admin: {isAdmin ? 'Yes' : 'No'}</p>
                 <p>Profile loaded: {profile ? 'Yes' : 'No'}</p>
                 <p>Admin check loading: {isCheckingAdmin ? 'Yes' : 'No'}</p>
+                <div className="mt-2 flex gap-2">
+                  <Button 
+                    size="sm" 
+                    onClick={handleAdminPanelClick}
+                    className="bg-orange-600 hover:bg-orange-700"
+                  >
+                    <Shield className="h-4 w-4 mr-2" />
+                    Test Admin Navigation
+                  </Button>
+                  <Link to="/admin">
+                    <Button size="sm" variant="outline">
+                      <Shield className="h-4 w-4 mr-2" />
+                      Direct Link Test
+                    </Button>
+                  </Link>
+                </div>
               </div>
             </CardContent>
           </Card>
