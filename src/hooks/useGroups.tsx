@@ -12,12 +12,20 @@ export const useGroups = (userId?: string) => {
     queryFn: async () => {
       if (!userId) return [];
       
-      const { data, error } = await supabase.rpc('find_matching_groups', {
-        user_uuid: userId
-      });
+      try {
+        const { data, error } = await supabase.rpc('find_matching_groups', {
+          user_uuid: userId
+        });
 
-      if (error) throw error;
-      return data || [];
+        if (error) {
+          console.error('Error calling find_matching_groups:', error);
+          return [];
+        }
+        return data || [];
+      } catch (error) {
+        console.error('Error in find_matching_groups query:', error);
+        return [];
+      }
     },
     enabled: !!userId,
   });
@@ -80,8 +88,8 @@ export const useGroups = (userId?: string) => {
   });
 
   return {
-    matchingGroups,
-    userGroups,
+    matchingGroups: matchingGroups || [],
+    userGroups: userGroups || [],
     isLoadingMatching,
     isLoadingUserGroups,
     joinGroup: joinGroup.mutate,

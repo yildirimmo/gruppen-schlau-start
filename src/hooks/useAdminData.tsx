@@ -35,81 +35,96 @@ export const useAdminData = () => {
   const { data: pendingGroups, isLoading: isLoadingPending, error: pendingError } = useQuery({
     queryKey: ['pending-groups'],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_pending_groups_with_students');
-      if (error) {
-        console.error('Error fetching pending groups:', error);
-        throw error;
+      try {
+        const { data, error } = await supabase.rpc('get_pending_groups_with_students');
+        if (error) {
+          console.error('Error fetching pending groups:', error);
+          return [];
+        }
+        return data as PendingGroup[];
+      } catch (error) {
+        console.error('Error in pending groups query:', error);
+        return [];
       }
-      return data as PendingGroup[];
     },
   });
 
   const { data: activeGroups, isLoading: isLoadingActive, error: activeError } = useQuery({
     queryKey: ['active-groups'],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_active_groups');
-      if (error) {
-        console.error('Error fetching active groups:', error);
-        throw error;
+      try {
+        const { data, error } = await supabase.rpc('get_active_groups');
+        if (error) {
+          console.error('Error fetching active groups:', error);
+          return [];
+        }
+        return data as ActiveGroup[];
+      } catch (error) {
+        console.error('Error in active groups query:', error);
+        return [];
       }
-      return data as ActiveGroup[];
     },
   });
 
   const { data: stats, isLoading: isLoadingStats } = useQuery({
     queryKey: ['admin-stats'],
     queryFn: async () => {
-      // Get total students count
-      const { data: studentsData, error: studentsError } = await supabase
-        .from('profiles')
-        .select('id', { count: 'exact' });
+      try {
+        // Get total students count
+        const { data: studentsData, error: studentsError } = await supabase
+          .from('profiles')
+          .select('id', { count: 'exact' });
 
-      if (studentsError) {
-        console.error('Error fetching students:', studentsError);
-        throw studentsError;
+        if (studentsError) {
+          console.error('Error fetching students:', studentsError);
+          throw studentsError;
+        }
+
+        // Get pending groups count
+        const { data: pendingData, error: pendingError } = await supabase
+          .from('groups')
+          .select('id', { count: 'exact' })
+          .eq('status', 'pending');
+
+        if (pendingError) {
+          console.error('Error fetching pending groups count:', pendingError);
+          throw pendingError;
+        }
+
+        // Get active groups count
+        const { data: activeData, error: activeError } = await supabase
+          .from('groups')
+          .select('id', { count: 'exact' })
+          .eq('status', 'active');
+
+        if (activeError) {
+          console.error('Error fetching active groups count:', activeError);
+          throw activeError;
+        }
+
+        // Get completed groups count
+        const { data: completedData, error: completedError } = await supabase
+          .from('groups')
+          .select('id', { count: 'exact' })
+          .eq('status', 'completed');
+
+        if (completedError) {
+          console.error('Error fetching completed groups count:', completedError);
+          throw completedError;
+        }
+
+        const stats = {
+          totalStudents: studentsData?.length || 0,
+          pendingGroups: pendingData?.length || 0,
+          activeGroups: activeData?.length || 0,
+          completedBookings: completedData?.length || 0,
+        };
+        
+        return stats;
+      } catch (error) {
+        console.error('Error fetching admin stats:', error);
+        return { totalStudents: 0, pendingGroups: 0, activeGroups: 0, completedBookings: 0 };
       }
-
-      // Get pending groups count
-      const { data: pendingData, error: pendingError } = await supabase
-        .from('groups')
-        .select('id', { count: 'exact' })
-        .eq('status', 'pending');
-
-      if (pendingError) {
-        console.error('Error fetching pending groups count:', pendingError);
-        throw pendingError;
-      }
-
-      // Get active groups count
-      const { data: activeData, error: activeError } = await supabase
-        .from('groups')
-        .select('id', { count: 'exact' })
-        .eq('status', 'active');
-
-      if (activeError) {
-        console.error('Error fetching active groups count:', activeError);
-        throw activeError;
-      }
-
-      // Get completed groups count
-      const { data: completedData, error: completedError } = await supabase
-        .from('groups')
-        .select('id', { count: 'exact' })
-        .eq('status', 'completed');
-
-      if (completedError) {
-        console.error('Error fetching completed groups count:', completedError);
-        throw completedError;
-      }
-
-      const stats = {
-        totalStudents: studentsData?.length || 0,
-        pendingGroups: pendingData?.length || 0,
-        activeGroups: activeData?.length || 0,
-        completedBookings: completedData?.length || 0,
-      };
-      
-      return stats;
     },
   });
 
@@ -167,14 +182,6 @@ export const useAdminData = () => {
       });
     },
   });
-
-  // Log any query errors
-  if (pendingError) {
-    console.error('Pending groups query error:', pendingError);
-  }
-  if (activeError) {
-    console.error('Active groups query error:', activeError);
-  }
 
   return {
     pendingGroups: pendingGroups || [],
