@@ -95,6 +95,7 @@ export const useAdminData = () => {
 
   const createGroup = useMutation({
     mutationFn: async ({ groupId, whatsappLink }: { groupId: string; whatsappLink: string }) => {
+      // Update group status to active
       const { data, error } = await supabase
         .from('groups')
         .update({
@@ -107,6 +108,22 @@ export const useAdminData = () => {
         .single();
 
       if (error) throw error;
+
+      // Send notification emails
+      const { error: emailError } = await supabase.functions.invoke('send-group-notification', {
+        body: { groupId, whatsappLink }
+      });
+
+      if (emailError) {
+        console.error('Error sending notification emails:', emailError);
+        // Don't throw error here - group was created successfully, just email failed
+        toast({
+          title: "Gruppe erstellt, aber E-Mail-Fehler",
+          description: "Die Gruppe wurde erstellt, aber die E-Mails konnten nicht versendet werden.",
+          variant: "destructive",
+        });
+      }
+
       return data;
     },
     onSuccess: () => {
