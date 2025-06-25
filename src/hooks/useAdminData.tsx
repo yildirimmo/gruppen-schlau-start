@@ -35,13 +35,11 @@ export const useAdminData = () => {
   const { data: pendingGroups, isLoading: isLoadingPending, error: pendingError } = useQuery({
     queryKey: ['pending-groups'],
     queryFn: async () => {
-      console.log('Fetching pending groups...');
       const { data, error } = await supabase.rpc('get_pending_groups_with_students');
       if (error) {
         console.error('Error fetching pending groups:', error);
         throw error;
       }
-      console.log('Pending groups data:', data);
       return data as PendingGroup[];
     },
   });
@@ -49,13 +47,11 @@ export const useAdminData = () => {
   const { data: activeGroups, isLoading: isLoadingActive, error: activeError } = useQuery({
     queryKey: ['active-groups'],
     queryFn: async () => {
-      console.log('Fetching active groups...');
       const { data, error } = await supabase.rpc('get_active_groups');
       if (error) {
         console.error('Error fetching active groups:', error);
         throw error;
       }
-      console.log('Active groups data:', data);
       return data as ActiveGroup[];
     },
   });
@@ -63,7 +59,6 @@ export const useAdminData = () => {
   const { data: stats, isLoading: isLoadingStats } = useQuery({
     queryKey: ['admin-stats'],
     queryFn: async () => {
-      console.log('Fetching admin stats...');
       // Get total students count
       const { data: studentsData, error: studentsError } = await supabase
         .from('profiles')
@@ -114,15 +109,12 @@ export const useAdminData = () => {
         completedBookings: completedData?.length || 0,
       };
       
-      console.log('Admin stats:', stats);
       return stats;
     },
   });
 
   const createGroup = useMutation({
     mutationFn: async ({ groupId, whatsappLink }: { groupId: string; whatsappLink: string }) => {
-      console.log('Creating group with ID:', groupId, 'WhatsApp link:', whatsappLink);
-      
       // Update group status to active
       const { data, error } = await supabase
         .from('groups')
@@ -140,10 +132,7 @@ export const useAdminData = () => {
         throw error;
       }
 
-      console.log('Group updated successfully:', data);
-
       // Send notification emails
-      console.log('Sending notification emails...');
       const { data: emailData, error: emailError } = await supabase.functions.invoke('send-group-notification', {
         body: { groupId, whatsappLink }
       });
@@ -156,14 +145,11 @@ export const useAdminData = () => {
           description: "Die Gruppe wurde erstellt, aber die E-Mails konnten nicht versendet werden.",
           variant: "destructive",
         });
-      } else {
-        console.log('Emails sent successfully:', emailData);
       }
 
       return data;
     },
     onSuccess: () => {
-      console.log('Group creation successful, invalidating queries...');
       queryClient.invalidateQueries({ queryKey: ['pending-groups'] });
       queryClient.invalidateQueries({ queryKey: ['active-groups'] });
       queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
