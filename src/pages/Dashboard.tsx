@@ -1,159 +1,188 @@
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Users, Calendar, Clock, BookOpen } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { 
+  Users, 
+  Clock, 
+  CheckCircle, 
+  AlertCircle, 
+  MapPin, 
+  GraduationCap,
+  ExternalLink 
+} from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useGroups } from "@/hooks/useGroups";
-import { Link } from "react-router-dom";
+import { GroupMatcher } from "@/components/GroupMatcher";
+import { AdminDebugPanel } from "@/components/AdminDebugPanel";
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const { profile, isLoading: isLoadingProfile } = useProfile(user?.id);
-  const { userGroups, isLoadingUserGroups } = useGroups(user?.id);
+  const { profile, isLoading: isLoadingProfile } = useProfile();
+  const { userGroups, isLoading: isLoadingGroups } = useGroups();
 
-  // Debug logging
   useEffect(() => {
     console.log('Dashboard - User:', user?.id);
     console.log('Dashboard - Profile:', profile);
-    console.log('Dashboard - User Groups:', userGroups);
+    console.log('Dashboard - Groups:', userGroups);
   }, [user, profile, userGroups]);
 
-  // Ensure userGroups is always an array
-  const safeUserGroups = Array.isArray(userGroups) ? userGroups : [];
-
-  if (isLoadingProfile || isLoadingUserGroups) {
+  if (isLoadingProfile || isLoadingGroups) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Wird geladen...</p>
+          <p className="text-gray-600">Dashboard wird geladen...</p>
         </div>
       </div>
     );
   }
 
+  const getGroupStatusBadge = (status: string) => {
+    switch (status) {
+      case 'active':
+        return <Badge className="bg-green-500">Aktive Gruppe</Badge>;
+      case 'pending':
+        return <Badge variant="secondary">Wartende Gruppe</Badge>;
+      case 'completed':
+        return <Badge variant="outline">Abgeschlossen</Badge>;
+      default:
+        return <Badge variant="destructive">Nicht zugewiesen</Badge>;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 py-8 px-4">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-6xl mx-auto">
+        {/* Debug Panel - nur für Entwicklung */}
+        <AdminDebugPanel />
+        
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center space-x-2 mb-2">
             <Users className="h-8 w-8 text-blue-600" />
-            <span className="text-2xl font-bold text-gray-900">Dashboard</span>
+            <span className="text-2xl font-bold text-gray-900">
+              Willkommen, {profile?.first_name}!
+            </span>
           </div>
           <p className="text-gray-600">
-            Willkommen zurück, {profile?.first_name}!
+            Hier ist deine Übersicht über deine Nachhilfegruppen und Aktivitäten.
           </p>
         </div>
 
         {/* Profile Card */}
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle>Ihr Profil</CardTitle>
-            <CardDescription>Ihre Lerninformationen</CardDescription>
+            <CardTitle>Dein Profil</CardTitle>
+            <CardDescription>Deine grundlegenden Informationen</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <p className="text-sm text-gray-600">Name</p>
-                <p className="font-medium">{profile?.first_name} {profile?.last_name}</p>
+              <div className="flex items-center space-x-2">
+                <MapPin className="h-5 w-5 text-gray-500" />
+                <span>{profile?.bundesland}</span>
               </div>
-              <div>
-                <p className="text-sm text-gray-600">Bundesland</p>
-                <p className="font-medium">{profile?.bundesland}</p>
+              <div className="flex items-center space-x-2">
+                <GraduationCap className="h-5 w-5 text-gray-500" />
+                <span>{profile?.klassenstufe}</span>
               </div>
-              <div>
-                <p className="text-sm text-gray-600">Klassenstufe</p>
-                <p className="font-medium">{profile?.klassenstufe}</p>
+              <div className="flex items-center space-x-2">
+                <Clock className="h-5 w-5 text-gray-500" />
+                <span>{profile?.sessions_per_month} Sessions/Monat</span>
               </div>
-            </div>
-            <div className="mt-4 flex gap-2">
-              <Link to="/availability">
-                <Button variant="outline" size="sm">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Verfügbarkeit bearbeiten
-                </Button>
-              </Link>
             </div>
           </CardContent>
         </Card>
 
-        {/* Groups Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BookOpen className="h-5 w-5" />
-              Ihre Gruppen
-            </CardTitle>
-            <CardDescription>
-              Überblick über Ihre Nachhilfegruppen
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {safeUserGroups.length === 0 ? (
-              <div className="text-center py-8">
-                <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  Noch keine Gruppen
-                </h3>
-                <p className="text-gray-600 mb-4">
-                  Sobald genügend Schüler mit ähnlichen Verfügbarkeiten registriert sind, 
-                  werden Sie automatisch einer Gruppe zugeordnet.
-                </p>
-                <Link to="/availability">
-                  <Button>
-                    <Calendar className="h-4 w-4 mr-2" />
-                    Verfügbarkeit angeben
-                  </Button>
-                </Link>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {safeUserGroups.map((membership) => (
-                  <Card key={membership.id} className="border-l-4 border-l-blue-500">
-                    <CardContent className="p-4">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="font-semibold mb-2">
-                            {membership.groups?.bundesland} - {membership.groups?.klassenstufe}
-                          </h3>
-                          <div className="flex items-center gap-2 mb-2">
-                            <Badge variant={
-                              membership.groups?.status === 'active' ? 'default' :
-                              membership.groups?.status === 'pending' ? 'secondary' : 'outline'
-                            }>
-                              {membership.groups?.status === 'active' ? 'Aktiv' :
-                               membership.groups?.status === 'pending' ? 'Wartend' : 'Abgeschlossen'}
-                            </Badge>
-                            <span className="text-sm text-gray-600">
-                              Beigetreten am {new Date(membership.joined_at).toLocaleDateString('de-DE')}
-                            </span>
-                          </div>
-                          {membership.groups?.status === 'active' && membership.groups?.whatsapp_link && (
-                            <div className="mt-3">
-                              <a 
-                                href={membership.groups.whatsapp_link} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-2 text-green-600 hover:text-green-700 font-medium"
-                              >
-                                <Users className="h-4 w-4" />
-                                WhatsApp Gruppe beitreten
-                              </a>
+        {/* Groups Overview */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          {/* Current Groups */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Deine aktuellen Gruppen
+              </CardTitle>
+              <CardDescription>
+                Übersicht über alle deine Gruppen-Mitgliedschaften
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {userGroups.length === 0 ? (
+                <div className="text-center py-8">
+                  <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    Keine Gruppen gefunden
+                  </h3>
+                  <p className="text-gray-600 mb-4">
+                    Du bist noch keiner Nachhilfegruppe beigetreten.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {userGroups.map((group, index) => (
+                    <Card key={index} className="border-l-4 border-l-blue-500">
+                      <CardContent className="p-4">
+                        <div className="flex justify-between items-start">
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-4">
+                              <div className="flex items-center gap-1">
+                                <MapPin className="h-4 w-4" />
+                                <span className="font-medium">{group.bundesland}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <GraduationCap className="h-4 w-4" />
+                                <span className="font-medium">{group.klassenstufe}</span>
+                              </div>
                             </div>
-                          )}
+                            
+                            <div className="space-y-1">
+                              <div className="text-sm font-medium">Zeitslots:</div>
+                              <div className="flex flex-wrap gap-1">
+                                {group.time_slots?.map((slot, slotIndex) => (
+                                  <Badge key={slotIndex} variant="outline" className="text-xs">
+                                    <Clock className="h-3 w-3 mr-1" />
+                                    {slot}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-center gap-2">
+                              {getGroupStatusBadge(group.status)}
+                              <span className="text-sm text-gray-500">
+                                Beigetreten am {new Date(group.joined_at).toLocaleDateString('de-DE')}
+                              </span>
+                            </div>
+                            
+                            {group.whatsapp_link && group.status === 'active' && (
+                              <div className="mt-3">
+                                <a 
+                                  href={group.whatsapp_link} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-2 text-green-600 hover:text-green-700 font-medium"
+                                >
+                                  <ExternalLink className="h-4 w-4" />
+                                  WhatsApp Gruppe beitreten
+                                </a>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Group Matching */}
+          <GroupMatcher />
+        </div>
       </div>
     </div>
   );
