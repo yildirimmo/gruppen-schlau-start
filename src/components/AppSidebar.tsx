@@ -110,10 +110,18 @@ export function AppSidebar() {
                         to={item.url} 
                         end={item.url === "/"}
                         className={({ isActive }) => 
-                          isActive 
-                            ? "bg-blue-100 text-blue-900 font-medium" 
-                            : "hover:bg-gray-100"
+                          `flex items-center gap-2 px-2 py-2 rounded transition-colors ${
+                            isActive 
+                              ? "bg-blue-100 text-blue-900 font-medium" 
+                              : "hover:bg-gray-100"
+                          }`
                         }
+                        onClick={(e) => {
+                          console.log(`Navigating to: ${item.url}`);
+                          if (item.url === "#") {
+                            e.preventDefault();
+                          }
+                        }}
                       >
                         <item.icon className="h-4 w-4" />
                         {state !== "collapsed" && <span>{item.title}</span>}
